@@ -6,6 +6,14 @@
             [clojure.walk :as walk])
   (:gen-class))
 
+
+;; helpers
+
+(defn load-json [path]
+  (walk/keywordize-keys (json/parse-string (slurp path))))
+
+
+
 ;; CSV
 (defn csv-data->maps [csv-data]
   (map zipmap
@@ -53,7 +61,7 @@
                "record" (:record m)}
 
               :schema
-              {"type"           "RECORD"
+              {"type"           "SCHEMA"
                "stream"         (:stream m)
                "schema"         (:schema m)
                "key_properties" (::key-properties m)}
@@ -82,7 +90,7 @@
 
 (defmethod tap "csv"
   [{:keys [config state catalog type]}]
-  (let [c (walk/keywordize-keys config)
+  (let [c (load-json config)
         file (:file c )
         stream (:stream c)
         schema (:schema c)
@@ -106,6 +114,7 @@
   (doseq [line (line-seq (java.io.BufferedReader. *in*))]
     (println (walk/keywordize-keys (json/parse-string line)))))
 
+
 ;; DISCOVER command
 
 (defmulti discover
@@ -123,15 +132,15 @@
                  :version     "0.1"}
    :global-opts [{:option  "config"
                   :as      "config file url or path"
-                  :type    :jsonfile
+                  :type    :string
                   :default "config.json"}
                  {:option  "state"
                   :as      "a file or URL for state"
-                  :type    :jsonfile
+                  :type    :string
                   :default "state.json"}
                  {:option  "catalog"
                   :as      "catalog of avaiable streams"
-                  :type    :jsonfile
+                  :type    :string
                   :default "catalog.json"}
                  ]
    :commands    [{:command     "tap" :short "source"

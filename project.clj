@@ -8,4 +8,5 @@
                  [cheshire "5.8.1"]
                  [org.clojure/data.csv "0.1.4"]]
   :main etl.core
-  :aot :all)
+  :aot :all
+  :plugins [[lein-bin "0.3.5"]])
