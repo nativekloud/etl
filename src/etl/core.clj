@@ -58,7 +58,8 @@
   [tap_stream_id stream schema]
   {"tap_stream_id" tap_stream_id
    "stream"        stream
-   "schema"        schema }
+   "schema"        schema
+   "key-properties" []}
   )
 
 
@@ -83,6 +84,32 @@
               :state
               {"type"  "STATE"
                "value" (:value m)}))))
+
+;; Private helpers for parsig
+
+
+(defn parse [s]
+  "Parses a message and returns it as a map"
+  (let [m (json/parse-string s)]
+    (when-not (map? m)
+      (throw (Exception. "Message must be a map, got" s)))
+    (case  (m "type")
+
+      "RECORD"
+      {:type :record
+       :stream (m "stream")
+       :record (m "record")}
+
+      "SCHEMA"
+      {:type :schema
+       :stream (m "stream")
+       :key-properties (m "msg-key-properties")
+       :schema (m "schema")}
+
+      "STATE"
+      {:type :state
+       :value (m "value")})))
+
 
 (defn write-record [stream record]
   (write-message {:type :record :stream stream :record record}))
@@ -128,13 +155,14 @@
     (log/info "Starting import ...")
     (doseq [stream streams]
       (with-open [reader (io/reader (:stream stream))]
-        (write-state {})
-        (write-schema (:schema stream) (:schema stream) (:key-properties stream))
+         (write-state {:value {}})
+         (write-schema (:schema stream) (:schema stream) (:key-properties stream))
         (->> (csv/read-csv reader)
              csv-data->maps
              (mapv #(write-record (:stream stream) % ))
              ))
-      (write-state {}))
+      (write-state {:value {}})
+      )
     (log/info "Import finish successfully.")))
 
 
@@ -147,7 +175,8 @@
 (defmethod sink :default
   [{:keys [config type]}]
   (doseq [line (line-seq (java.io.BufferedReader. *in*))]
-    (println (walk/keywordize-keys (json/parse-string line)))))
+    (println (:type (parse line)))))
+
 
 ;; cli-matic config
 
