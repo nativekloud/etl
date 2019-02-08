@@ -6,7 +6,12 @@
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [cli-matic "0.3.3"]
                  [cheshire "5.8.1"]
-                 [org.clojure/data.csv "0.1.4"]]
+                 [org.clojure/data.csv "0.1.4"]
+                 [org.clojure/tools.logging "0.4.1"]
+                 [log4j "1.2.15" :exclusions [javax.mail/mail
+                                              javax.jms/jms
+                                              com.sun.jdmk/jmxtools
+                                              com.sun.jmx/jmxri]]]
   :main etl.core
   :aot :all
   :plugins [[lein-bin "0.3.5"]])

@@ -3,7 +3,8 @@
             [cheshire.core :as json]
             [clojure.java.io :as io]
             [clojure.data.csv :as csv]
-            [clojure.walk :as walk])
+            [clojure.walk :as walk]
+            [clojure.tools.logging :as log])
   (:gen-class))
 
 
@@ -95,6 +96,7 @@
         stream (:stream c)
         schema (:schema c)
         key-properties (:key-properties c)]
+    (log/info "Starting import for")
     (write-state {})
     (write-schema stream schema key-properties)
     (with-open [reader (io/reader file )]
@@ -102,7 +104,8 @@
            csv-data->maps
            (mapv #(write-record file % ))
            ))
-    (write-state {})))
+    (write-state {})
+    (log/info "Import finish successfully.")))
 
 ;; SINK command
 
@@ -128,7 +131,7 @@
 
 (def CONFIGURATION
   {:app         {:command     "etl"
-                 :description "ETL in clojure"
+                 :description "ETL in Clojure"
                  :version     "0.1"}
    :global-opts [{:option  "config"
                   :as      "config file url or path"
