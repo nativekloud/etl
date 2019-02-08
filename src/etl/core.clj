@@ -16,6 +16,10 @@
 
 
 ;; CSV
+(defn walk [dirpath pattern]
+(doall (filter #(re-matches pattern (.getName %))
+               (file-seq (io/file dirpath)))))
+
 (defn csv-data->maps [csv-data]
   (map zipmap
        (->> (first csv-data) ;; First row is the header
@@ -49,6 +53,15 @@
 
 ;; public
 
+(defn create-stream
+  "create stream json"
+  [tap_stream_id stream schema]
+  {"tap_stream_id" tap_stream_id
+   "stream"        stream
+   "schema"        schema }
+  )
+
+
 (defn write-message
   "Writes a message to *out*"
   [m]
@@ -80,6 +93,25 @@
 (defn write-schema [stream schema key-properties]
   (write-message {:type :schema :stream stream :schema schema :key-properties key-properties}))
 
+
+;; DISCOVER command
+
+(defmulti discover
+  (fn [args] (:type args)))
+
+(defmethod discover :default
+  [args]
+  (log/info "Discover not implemented for ->" args))
+
+(defmethod discover "csv"
+  [args]
+  (let [config (load-json (:config args))
+        files (mapv #(.getPath %) (walk (:dirpath config) (re-pattern (:pattern config))))]
+    (println (json/generate-string {:streams (mapv #(create-stream % % {}) files)} {:pretty true}))
+    ))
+
+
+
 ;; TAP command
 
 (defmulti tap
@@ -91,21 +123,21 @@
 
 (defmethod tap "csv"
   [{:keys [config state catalog type]}]
-  (let [c (load-json config)
-        file (:file c )
-        stream (:stream c)
-        schema (:schema c)
-        key-properties (:key-properties c)]
-    (log/info "Starting import for")
-    (write-state {})
-    (write-schema stream schema key-properties)
-    (with-open [reader (io/reader file )]
-      (->> (csv/read-csv reader)
-           csv-data->maps
-           (mapv #(write-record file % ))
-           ))
-    (write-state {})
+  (let [config (load-json config)
+        streams (:streams (load-json catalog))]
+    (log/info "Starting import ...")
+    (doseq [stream streams]
+      (with-open [reader (io/reader (:stream stream))]
+        (write-state {})
+        (write-schema (:schema stream) (:schema stream) (:key-properties stream))
+        (->> (csv/read-csv reader)
+             csv-data->maps
+             (mapv #(write-record (:stream stream) % ))
+             ))
+      (write-state {}))
     (log/info "Import finish successfully.")))
+
+
 
 ;; SINK command
 
@@ -117,17 +149,8 @@
   (doseq [line (line-seq (java.io.BufferedReader. *in*))]
     (println (walk/keywordize-keys (json/parse-string line)))))
 
-
-;; DISCOVER command
-
-(defmulti discover
-  (fn [{:keys [config state catalog type]}] type))
-
-(defmethod discover :default
-  [{:keys [config state catalog type]}]
-  (println "discover type not implemented ->" type))
-
 ;; cli-matic config
+
 
 (def CONFIGURATION
   {:app         {:command     "etl"

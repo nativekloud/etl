@@ -1,3 +1,4 @@
 {
-    "file": "resources/sample.csv"
+    "dirpath": "/Users/radek/src/github.com/nativekloud",
+    "pattern": ".*\\.csv"
 }
