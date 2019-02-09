@@ -32,6 +32,29 @@ A Clojure ETL based on Singer open source standard [docs](https://github.com/sin
 
 ## Usage
 
+### Synopsis
+
+Since we have single executable for tap and target synopsis is little different.
+
+``` shell
+etl --config CONFIG [--state STATE] [--catalog CATALOG] tap|target|discovery --type TYPE
+
+CONFIG is a required argument that points to a JSON file containing any
+configuration parameters the Tap|Target needs.
+
+STATE is an optional argument pointing to a JSON file that the
+Tap|Target can use to remember information from the previous invocation,
+like, for example, the point where it left off.
+
+CATALOG is an optional argument pointing to a JSON file that the
+Tap|Target can use to filter which streams should be synced.
+
+tap|target|discovey is required argument to choose if we running tap, target or discovery
+
+TYPE is required argument to specify type of tap or target ie. csv
+
+```
+
 ### Build
 
 ``` shell
