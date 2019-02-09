@@ -10,15 +10,22 @@
 
 ;; helpers
 
-(defn load-json [path]
-  (walk/keywordize-keys (json/parse-string (slurp path))))
+(defn encode [data]
+  (json/generate-string data))
 
+(defn decode [data]
+  (json/parse-string data))
 
+(defn load-config [path]
+  (walk/keywordize-keys (decode (slurp path))))
 
 ;; CSV
-(defn walk [dirpath pattern]
-(doall (filter #(re-matches pattern (.getName %))
-               (file-seq (io/file dirpath)))))
+
+(defn walk
+  "walk dirpath searching for pattern"
+  [dirpath pattern]
+  (doall (filter #(re-matches pattern (.getName %))
+                 (file-seq (io/file dirpath)))))
 
 (defn csv-data->maps [csv-data]
   (map zipmap
@@ -49,11 +56,13 @@
    transforms data (vector of vectors with all values)
    writes csv file."
   [file maps]
-  (->> maps maps->csv-data (write-csv file)))
+  (->> maps
+       maps->csv-data
+       (write-csv file)))
 
 ;; public
 
-(defn create-stream
+(defn ->stream
   "create stream json"
   [tap_stream_id stream schema]
   {"tap_stream_id" tap_stream_id
@@ -62,11 +71,11 @@
    "key-properties" []}
   )
 
-
+;; TODO use multimethod
 (defn write-message
   "Writes a message to *out*"
   [m]
-  (println (json/generate-string
+  (println (encode
             (case (:type m)
               :record
               {"type"   "RECORD"
@@ -85,12 +94,23 @@
               {"type"  "STATE"
                "value" (:value m)}))))
 
+(defn write-record [stream record]
+  (write-message {:type :record :stream stream :record record}))
+
+(defn write-state [value]
+  (write-message {:type :state, :value value}))
+
+(defn write-schema [stream schema key-properties]
+  (write-message {:type :schema :stream stream :schema schema :key-properties key-properties}))
+
+
 ;; Private helpers for parsig
 
 
+;; TODO use mutlimethods
 (defn parse [s]
   "Parses a message and returns it as a map"
-  (let [m (json/parse-string s)]
+  (let [m (decode s)]
     (when-not (map? m)
       (throw (Exception. "Message must be a map, got" s)))
     (case  (m "type")
@@ -110,17 +130,6 @@
       {:type :state
        :value (m "value")})))
 
-
-(defn write-record [stream record]
-  (write-message {:type :record :stream stream :record record}))
-
-(defn write-state [value]
-  (write-message {:type :state, :value value}))
-
-(defn write-schema [stream schema key-properties]
-  (write-message {:type :schema :stream stream :schema schema :key-properties key-properties}))
-
-
 ;; DISCOVER command
 
 (defmulti discover
@@ -132,12 +141,12 @@
 
 (defmethod discover "csv"
   [args]
-  (let [config (load-json (:config args))
-        files (mapv #(.getPath %) (walk (:dirpath config) (re-pattern (:pattern config))))]
-    (println (json/generate-string {:streams (mapv #(create-stream % % {}) files)} {:pretty true}))
+  (let [config (load-config (:config args))
+        dirpath (:dirpath config)
+        pattern (re-pattern (:pattern config))
+        files (mapv #(.getPath %) (walk  dirpath pattern))]
+    (println (encode {:streams (mapv #(->stream % % {}) files)}))
     ))
-
-
 
 ;; TAP command
 
@@ -150,8 +159,8 @@
 
 (defmethod tap "csv"
   [{:keys [config state catalog type]}]
-  (let [config (load-json config)
-        streams (:streams (load-json catalog))]
+  (let [config (load-config config)
+        streams (:streams (load-config catalog))]
     (log/info "Starting import ...")
     (doseq [stream streams]
       (with-open [reader (io/reader (:stream stream))]
@@ -164,8 +173,6 @@
       (write-state {:value {}})
       )
     (log/info "Import finish successfully.")))
-
-
 
 ;; SINK command
 
