@@ -6,9 +6,9 @@ A Clojure ETL based on Singer open source standard [docs](https://github.com/sin
 
 ## Goals
 
-- support Singer standard
-- written in Clojure :)
-- single executable
+- [ ] support Singer specification
+- [x] written in Clojure :)
+- [x] single executable
 
 ## TODO
 
@@ -35,15 +35,15 @@ Example CSV tap
 
 ``` shell
 # Discovery - will create catalog.json
-target/etl-0.1.0-SNAPSHOT --config resources/tap-csv-config.json discover --type csv
+target/etl --config resources/tap-csv-config.json discover --type csv > catalog.json
 # Run tap - will send data to *out*
-target/etl-0.1.0-SNAPSHOT --config resources/tap-csv-config.json tap --type csv
+target/etl --config resources/tap-csv-config.json tap --type csv
 ```
 
 
 ## License
 
-Copyright © 2019
+Copyright © 2019 NativeKloud
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.

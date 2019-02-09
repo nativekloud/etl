@@ -14,4 +14,6 @@
                                               com.sun.jmx/jmxri]]]
   :main etl.core
   :aot :all
-  :plugins [[lein-bin "0.3.5"]])
+  :plugins [[lein-bin "0.3.5"]]
+  :bin {:name "etl"}
+  )

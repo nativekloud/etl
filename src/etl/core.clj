@@ -81,11 +81,11 @@
 
 (defn ->stream
   "create stream json"
-  [tap_stream_id stream schema]
+  [tap_stream_id stream schema key-properties]
   {"tap_stream_id" tap_stream_id
    "stream"        stream
    "schema"        schema
-   "key-properties" []}
+   "key-properties" key-properties}
   )
 
 (defn ->streams [streams]
@@ -125,7 +125,8 @@
 
 ;; Private helpers for parsig
 
-;; TODO use mutlimethods
+;; TODO use mutlimethods ?
+
 (defn parse [s]
   "Parses a message and returns it as a map"
   (let [m (decode s)]
@@ -163,10 +164,10 @@
         dirpath (:dirpath config)
         pattern (re-pattern (:pattern config))
         files (mapv #(.getPath %) (walk  dirpath pattern))]
-    (-> (mapv #(->stream % % {}) files)
+    (-> (mapv #(->stream % % {} []) files) ;kinda ugly
         ->streams
         encode
-        println)
+        send-out)
     ))
 
 ;; TAP command
