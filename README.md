@@ -22,10 +22,22 @@ A Clojure ETL based on Singer open source standard [docs](https://github.com/sin
 
 ## Usage
 
+### Build
+
 ``` shell
-java -jar target/etl-0.1.0-SNAPSHOT-standalone.jar --config resources/tap-csv-config.json tap --type csv
+lein bin
 ```
 
+### Run
+
+Example CSV tap
+
+``` shell
+# Discovery - will create catalog.json
+target/etl-0.1.0-SNAPSHOT --config resources/tap-csv-config.json discover --type csv
+# Run tap - will send data to *out*
+target/etl-0.1.0-SNAPSHOT --config resources/tap-csv-config.json tap --type csv
+```
 
 
 ## License
