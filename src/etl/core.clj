@@ -10,14 +10,33 @@
 
 ;; helpers
 
+(defn now []
+  (.toString (java.time.LocalDateTime/now)))
+
 (defn encode [data]
   (json/generate-string data))
 
 (defn decode [data]
   (json/parse-string data))
 
-(defn load-config [path]
+(defn read-config-file [path]
   (walk/keywordize-keys (decode (slurp path))))
+
+(defn load-config [args]
+  (->(:config args)
+     read-config-file))
+
+(defn load-state [args]
+  (->(:state args)
+     read-config-file))
+
+(defn load-catalog [args]
+  (->(:catalog args)
+     read-config-file))
+
+
+(defn send-out [m]
+  (println m))
 
 ;; CSV
 
@@ -71,17 +90,20 @@
    "key-properties" []}
   )
 
+(defn ->streams [streams]
+  {"streams" streams})
+
 ;; TODO use multimethod
 (defn write-message
   "Writes a message to *out*"
   [m]
-  (println (encode
+  (send-out (encode
             (case (:type m)
               :record
               {"type"   "RECORD"
                "stream" (:stream m)
                ;; TODO extract as fn with RFC3339 formatting
-               "time_extracted" (.toString (java.time.LocalDateTime/now))
+               "time_extracted" (now)
                "record" (:record m)}
 
               :schema
@@ -137,30 +159,33 @@
 
 (defmethod discover :default
   [args]
-  (log/info "Discover not implemented for ->" args))
+  (log/error "Discover not implemented for ->" args))
 
 (defmethod discover "csv"
   [args]
-  (let [config (load-config (:config args))
+  (let [config (load-config args)
         dirpath (:dirpath config)
         pattern (re-pattern (:pattern config))
         files (mapv #(.getPath %) (walk  dirpath pattern))]
-    (println (encode {:streams (mapv #(->stream % % {}) files)}))
+    (-> (mapv #(->stream % % {}) files)
+        ->streams
+        encode
+        println)
     ))
 
 ;; TAP command
 
 (defmulti tap
-  (fn [{:keys [config state catalog type]}] type))
+  (fn [args] (:type args)))
 
 (defmethod tap :default
-  [{:keys [config state catalog type]}]
-  (println "tap type not implemented ->" type))
+  [args]
+  (log/info "tap type not implemented ->" args))
 
 (defmethod tap "csv"
-  [{:keys [config state catalog type]}]
-  (let [config (load-config config)
-        streams (:streams (load-config catalog))]
+  [args]
+  (let [config (load-config args)
+        streams (:streams (load-catalog args))]
     (log/info "Starting import ...")
     (doseq [stream streams]
       (with-open [reader (io/reader (:stream stream))]
@@ -177,12 +202,12 @@
 ;; SINK command
 
 (defmulti sink
-  (fn [{:keys [config type]}] type))
+  (fn [args] (:type args)))
 
 (defmethod sink :default
-  [{:keys [config type]}]
+  [args]
   (doseq [line (line-seq (java.io.BufferedReader. *in*))]
-    (println (:type (parse line)))))
+    (log/info (:type (parse line)))))
 
 
 ;; cli-matic config
