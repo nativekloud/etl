@@ -7,7 +7,6 @@
             [clojure.tools.logging :as log])
   (:gen-class))
 
-
 ;; helpers
 
 (defn now []
@@ -33,7 +32,6 @@
 (defn load-catalog [args]
   (->(:catalog args)
      read-config-file))
-
 
 (defn send-out [m]
   (println m))
@@ -125,9 +123,7 @@
 (defn write-schema [stream schema key-properties]
   (write-message {:type :schema :stream stream :schema schema :key-properties key-properties}))
 
-
 ;; Private helpers for parsig
-
 
 ;; TODO use mutlimethods
 (defn parse [s]
@@ -209,9 +205,7 @@
   (doseq [line (line-seq (java.io.BufferedReader. *in*))]
     (log/info (:type (parse line)))))
 
-
 ;; cli-matic config
-
 
 (def CONFIGURATION
   {:app         {:command     "etl"
