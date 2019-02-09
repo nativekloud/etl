@@ -15,7 +15,16 @@ A Clojure ETL based on Singer open source standard [docs](https://github.com/sin
 - [x] CLI executable
 - [ ] Docker image
 - [ ] Travis
-- [ ] Singer standard implementation
+- [ ] Singer Specification
+  - [x] [Synopsis](https://github.com/singer-io/getting-started/blob/master/docs/SPEC.md#synopsis)
+  - [x] [Input](https://github.com/singer-io/getting-started/blob/master/docs/SPEC.md#input)
+    - [x] Config
+    - [x] State
+    - [x] Catalog
+  - [ ] [Output](https://github.com/singer-io/getting-started/blob/master/docs/SPEC.md#output)
+    - [x] RECORD Message
+    - [ ] SCHEMA Message
+    - [x] STATE Message
 - [x] CSV tap
 - [ ] CSV target
 - [ ] Google PubSub tap
