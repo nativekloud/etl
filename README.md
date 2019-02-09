@@ -14,6 +14,7 @@ A Clojure ETL based on Singer open source standard [docs](https://github.com/sin
 
 - [x] CLI executable
 - [ ] Docker image
+- [ ] Travis
 - [ ] Singer standard implementation
 - [x] CSV tap
 - [ ] CSV target
@@ -25,7 +26,7 @@ A Clojure ETL based on Singer open source standard [docs](https://github.com/sin
 ### Build
 
 ``` shell
-lein bin
+lein test && lein bin
 ```
 
 ### Run
