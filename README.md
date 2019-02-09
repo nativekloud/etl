@@ -10,6 +10,15 @@ A Clojure ETL based on Singer open source standard [docs](https://github.com/sin
 - written in Clojure :)
 - single executable
 
+## TODO
+
+- [x] CLI executable
+- [ ] Docker image
+- [ ] Singer standard implementation
+- [x] CSV tap
+- [ ] CSV target
+- [ ] Google PubSub tap
+- [ ] Google PubSub target
 
 ## Usage
 
