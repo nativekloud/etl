@@ -25,6 +25,7 @@ A Clojure ETL based on Singer open source standard [docs](https://github.com/sin
     - [x] RECORD Message
     - [ ] SCHEMA Message
     - [x] STATE Message
+  - [ ] Metrics
 - [x] CSV tap
 - [ ] CSV target
 - [ ] Google PubSub tap
@@ -68,7 +69,7 @@ Example CSV tap
 ``` shell
 # Discovery - will create catalog.json
 target/etl --config resources/tap-csv-config.json discover --type csv > catalog.json
-# Run tap - will send data to *out*
+# Run tap - will send data to *out* using discovered streams in catalog.json
 target/etl --config resources/tap-csv-config.json tap --type csv
 ```
 
