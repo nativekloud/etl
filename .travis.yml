@@ -1,9 +1,5 @@
 language: clojure
 lein: lein
-jdk:
-  - oraclejdk10
-  - oraclejdk11
-  - oraclejdk12
 branches:
   only:
     - master
