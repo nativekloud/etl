@@ -1,4 +1,4 @@
-# ETL framework for Clojure
+# ETL framework for Clojure [![Build Status](https://travis-ci.org/nativekloud/etl.svg?branch=master)](https://travis-ci.org/nativekloud/etl)
 
 A Clojure ETL based on Singer open source standard [docs](https://github.com/singer-io/getting-started)
 
