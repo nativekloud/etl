@@ -3,13 +3,17 @@
             [clojure.java.io :as io]
             [clojure.tools.logging :as log]
             [etl.singer.core :refer [tap discover sink load-config load-catalog]]
-            [etl.singer.messages :refer [write-record write-schema write-state]]))
+            [etl.singer.messages :refer [write-record write-schema write-state]]
+            [etl.singer.catalog :refer [stream write-streams]]))
 
 ;; CSV
+
+(defn uuid [] (str (java.util.UUID/randomUUID)))
 
 (defn walk
   "walk dirpath searching for pattern"
   [dirpath pattern]
+  (log/info "Start walking filesystem to discover files." dirpath " " pattern )
   (doall (filter #(re-matches pattern (.getName %))
                  (file-seq (io/file dirpath)))))
 
@@ -46,6 +50,23 @@
        maps->csv-data
        (write-csv file)))
 
+(defn file->stream [path]
+  (stream (uuid) path))
+
+;;; Public
+
+;; discover CSV files based on pattern and write streams to *out* for creating catalog
+(defmethod discover "csv"
+  [args]
+  (let [config (load-config args)
+        dirpath (:dirpath config)
+        pattern (re-pattern (:pattern config))
+        files (walk dirpath pattern)
+        file-names (mapv #(.getPath %) files)
+        streams (mapv #(file->stream %) file-names)]
+    (write-streams streams)
+     ))
+
 (defmethod tap "csv"
   [args]
   (let [config (load-config args)
@@ -62,28 +83,3 @@
       (write-state {:value {}})
       )
     (log/info "Import finish successfully.")))
-
-
-;; (defn ->stream
-;;   "create stream json"
-;;   [tap_stream_id stream schema key-properties]
-;;   {"tap_stream_id" tap_stream_id
-;;    "stream"        stream
-;;    "schema"        schema
-;;    "key-properties" key-properties}
-;;   )
-
-;; (defn ->streams [streams]
-;;   {"streams" streams})
-
-;; (defmethod discover "csv"
-;;   [args]
-;;   (let [config (load-config args)
-;;         dirpath (:dirpath config)
-;;         pattern (re-pattern (:pattern config))
-;;         files (mapv #(.getPath %) (walk  dirpath pattern))]
-;;     (-> (mapv #(->stream % % {} []) files) ;kinda ugly
-;;         ->streams
-;;         encode
-;;         send-out)
-;;     ))

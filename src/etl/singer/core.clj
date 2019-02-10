@@ -30,7 +30,9 @@
 (defn read-config-file [path]
   (walk/keywordize-keys (decode (slurp path))))
 
-(defn load-config [args]
+(defn load-config
+  "Reads config file and returns config map."
+  [args]
   (->(:config args)
      read-config-file))
 
