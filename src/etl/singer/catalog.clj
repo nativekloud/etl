@@ -27,10 +27,12 @@
   [streams]
   {:streams streams})
 
+(defn format-stream [stream]
+  (encode stream))
 
 (defn stream [tap_stream_id stream]
   (->CatalogEntry tap_stream_id stream)
   )
 
 (defn write-streams [streams]
-  (println (encode  (->Catalog streams))))
+  (println (format-stream (->Catalog streams))))
