@@ -1,15 +1,18 @@
 (ns etl.core
-  (:require [cli-matic.core :refer [run-cmd]]
+  (:require [say-cheez.core :refer [capture-build-env-to]]
+            [cli-matic.core :refer [run-cmd]]
             [etl.singer.core :refer [tap sink discover]]
             [etl.csv])
   (:gen-class))
-
+;;
+(capture-build-env-to BUILD)
 ;; cli-matic config
 
 (def CONFIGURATION
   {:app         {:command     "etl"
                  :description "ETL in Clojure"
-                 :version     "0.1"}
+                 :version     (:version (:project BUILD))
+                 :build-at (:build-at (:project BUILD))}
    :global-opts [{:option  "config"
                   :as      "config file url or path"
                   :type    :string

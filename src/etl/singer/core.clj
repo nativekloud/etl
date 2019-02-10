@@ -24,7 +24,6 @@
   [args]
   (log/error "Discover not implemented for ->" args))
 
-
 (defn now []
   (.toString (java.time.LocalDateTime/now)))
 
