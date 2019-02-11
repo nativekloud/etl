@@ -64,13 +64,19 @@
     (case  (m "type")
 
       "RECORD"
-      (->RecordMessage (:stream m) (:record m) (:time_extracted m) (:version m))
+      (->RecordMessage (m "stream")
+                       (m "record")
+                       (m "time_extracted")
+                       (m "version"))
 
       "SCHEMA"
-      (->SchemaMessage (:stream m) (:schema m) (:key-properties m) (:bookmark-properties))
+      (->SchemaMessage (m "stream")
+                       (m "schema")
+                       (m "key-properties")
+                       (m "bookmark-properties"))
 
       "STATE"
-      (->StateMessage (:stream m) (:value m)))))
+      (->StateMessage (m "value")))))
 
 (defn format-message [message]
   (encode message))

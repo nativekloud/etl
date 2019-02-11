@@ -3,7 +3,7 @@
             [clojure.java.io :as io]
             [clojure.tools.logging :as log]
             [etl.singer.core :refer [tap discover sink load-config load-catalog]]
-            [etl.singer.messages :refer [write-record write-schema write-state]]
+            [etl.singer.messages :refer [write-record write-schema write-state parse]]
             [etl.singer.catalog :refer [stream write-streams]]))
 
 ;; CSV
@@ -75,7 +75,10 @@
     (doseq [stream streams]
       (with-open [reader (io/reader (:stream stream))]
         (write-state {:value {}})
-        (write-schema (:schema stream) (:schema stream) (:key-properties stream) (:bookmark-properties stream))
+        (write-schema (:stream stream)
+                      (:schema stream)
+                      (:key-properties stream)
+                      (:bookmark-properties stream))
         (->> (csv/read-csv reader)
              csv-data->maps
              (mapv #(write-record (:stream stream) % nil nil))
@@ -83,3 +86,25 @@
       (write-state {:value {}})
       )
     (log/info "Import finish successfully.")))
+
+(defmethod sink "csv"
+  [args]
+  (let [config (load-config args)
+        dirpath (:dirpath config)]
+  (with-open [f (io/writer (:file config))]
+   (doseq [line (line-seq (java.io.BufferedReader. *in*))]
+     (let [message (parse line)]
+         (case (:type message)
+         
+         "RECORD"
+          (csv/write-csv f (maps->csv-data [(:record message)]))
+
+          "SCHEMA"
+          ()
+;;         (log/info "schema" message)
+
+          "STATE"
+          ()
+  ;;       (log/info "STATE"  message)
+         ))))))
+
