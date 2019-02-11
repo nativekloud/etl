@@ -2,7 +2,8 @@
   (:require [say-cheez.core :refer [capture-build-env-to]]
             [cli-matic.core :refer [run-cmd]]
             [etl.singer.core :refer [tap sink discover]]
-            [etl.csv])
+            [etl.csv]
+            [etl.pubsub])
   (:gen-class))
 ;;
 (capture-build-env-to BUILD)

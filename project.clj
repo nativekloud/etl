@@ -7,6 +7,8 @@
                  [cli-matic "0.3.3"]
                  [cheshire "5.8.1"]
                  [org.clojure/data.csv "0.1.4"]
+                 [com.google.auth/google-auth-library-credentials "0.6.1"]
+                 [com.google.cloud/google-cloud-pubsub "1.62.0" ]
                  [say-cheez "0.1.1"]
                  [org.clojure/tools.logging "0.4.1"]
                  [log4j "1.2.15" :exclusions [javax.mail/mail

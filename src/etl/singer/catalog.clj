@@ -3,9 +3,10 @@
 
 
 (defn ->CatalogEntry
-  ([tap_stream_id stream]
+  ([tap_stream_id stream schema]
    {:tap_stream_id tap_stream_id
-    :stream stream})
+    :stream stream
+    :schema schema})
   ([tap_stream_id stream key-properties schema
      replication-key is-view database table
     row-count stream-alias metadata replication-method]
@@ -30,8 +31,8 @@
 (defn format-stream [stream]
   (encode stream))
 
-(defn stream [tap_stream_id stream]
-  (->CatalogEntry tap_stream_id stream)
+(defn stream [tap_stream_id stream schema]
+  (->CatalogEntry tap_stream_id stream schema)
   )
 
 (defn write-streams [streams]

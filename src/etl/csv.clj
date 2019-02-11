@@ -2,7 +2,7 @@
   (:require [clojure.data.csv :as csv]
             [clojure.java.io :as io]
             [clojure.tools.logging :as log]
-            [etl.singer.core :refer [tap discover sink load-config load-catalog]]
+            [etl.singer.core :refer [tap discover sink load-config load-catalog now]]
             [etl.singer.messages :refer [write-record write-schema write-state parse]]
             [etl.singer.catalog :refer [stream write-streams]]))
 
@@ -51,7 +51,7 @@
        (write-csv file)))
 
 (defn file->stream [path]
-  (stream (uuid) path))
+  (stream (uuid) path {}))
 
 ;;; Public
 
@@ -71,10 +71,11 @@
   [args]
   (let [config (load-config args)
         streams (:streams (load-catalog args))]
-    (log/info "Starting import ...")
+    (log/info "Replicating data from CSV.")
     (doseq [stream streams]
       (with-open [reader (io/reader (:stream stream))]
-        (write-state {:value {}})
+        ;;(write-state {:value {}})
+        (log/info "Replicating data from stream: " (:stream stream))
         (write-schema (:stream stream)
                       (:schema stream)
                       (:key-properties stream)
@@ -83,9 +84,9 @@
              csv-data->maps
              (mapv #(write-record (:stream stream) % nil nil))
              ))
-      (write-state {:value {}})
+      (write-state {:start_date (now)})
       )
-    (log/info "Import finish successfully.")))
+    (log/info "Tap exiting normally.")))
 
 (defmethod sink "csv"
   [args]
@@ -100,11 +101,9 @@
           (csv/write-csv f (maps->csv-data [(:record message)]))
 
           "SCHEMA"
-          ()
-;;         (log/info "schema" message)
+          (log/info "schema" message)
 
           "STATE"
-          ()
-  ;;       (log/info "STATE"  message)
+          (log/info "STATE"  message)
          ))))))
 
