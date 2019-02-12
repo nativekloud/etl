@@ -35,8 +35,9 @@
 
 (defn list-subscriptions [project_id]
   (let [client (SubscriptionAdminClient/create)]
-    (mapv #(.getName %) (iterator-seq (.iterator (.iterateAll
-                                                  (.listSubscriptions client project_id)))))))
+    (mapv #(.getName %) (iterator-seq (.iterator
+                                       (.iterateAll
+                                        (.listSubscriptions client project_id)))))))
 
 
 (defn publish-async 
@@ -97,6 +98,7 @@
         subs (subscribe-streams streams)]
     (log/info "Replicating data from Google PubSub." subs)
     ;; keep tap open
+    ;; TODO : exit cleanly with Ctrl + C
     (while true ())))
 
 

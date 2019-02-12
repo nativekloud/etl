@@ -5,6 +5,9 @@
             [etl.csv]
             [etl.pubsub])
   (:gen-class))
+
+(set! *warn-on-reflection* false)
+
 ;;
 (capture-build-env-to BUILD)
 ;; cli-matic config
