@@ -26,6 +26,8 @@
    ))
 
 
+(def state (atom {}))
+
 ;;; Private
 (defn list-topics [project_id]
   (let [client (TopicAdminClient/create)]
@@ -80,6 +82,17 @@
 (defn subscription->stream [s]
   (stream s s {}))
 
+
+(defn periodically
+  [f interval]
+  (doto (Thread.
+          #(try
+             (while (not (.isInterrupted (Thread/currentThread)))
+               (Thread/sleep interval)
+               (f))
+             (catch InterruptedException _)))
+    (.start)))
+
 ;;; Singer API
 
 (defmethod discover "pubsub"
@@ -95,10 +108,13 @@
   (let [config (load-config args)
         catalog (load-catalog args)
         streams (:streams catalog)
-        subs (subscribe-streams streams)]
+        subs (subscribe-streams streams)
+        cancel (periodically (fn [] (mapv #(log/info (.toString %)) (:subs @state))) 30000)]
     (log/info "Replicating data from Google PubSub." subs)
+    (swap! state assoc :subs subs)
     ;; keep tap open
     ;; TODO : exit cleanly with Ctrl + C
     (while true ())))
+
 
 

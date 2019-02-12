@@ -6,6 +6,8 @@
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [cli-matic "0.3.3"]
                  [cheshire "5.8.1"]
+                 [clj-http "3.9.1"]
+                 [slingshot "0.12.2"]
                  [org.clojure/data.csv "0.1.4"]
                  [com.google.auth/google-auth-library-credentials "0.13.0"]
                  [com.google.cloud/google-cloud-pubsub "1.62.0"]
@@ -25,3 +27,4 @@
          :dockerfile "Dockerfile"
          :build-dir  "target"}
   )
+ 
