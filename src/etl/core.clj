@@ -3,7 +3,8 @@
             [cli-matic.core :refer [run-cmd]]
             [etl.singer.core :refer [tap sink discover]]
             [etl.csv]
-            [etl.pubsub])
+            [etl.pubsub]
+            [etl.msgraph.core])
   (:gen-class))
 
 ;;(set! *warn-on-reflection* false)

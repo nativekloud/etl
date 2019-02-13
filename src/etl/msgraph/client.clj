@@ -5,6 +5,8 @@
             [slingshot.slingshot :refer [throw+ try+]]))
 
 ;;; Microsoft Graph API URL's
+;;; https://docs.microsoft.com/en-us/graph/use-the-api
+;;; https://graph.microsoft.com/{version}/{resource}?query-parameters
 
 (def settings (atom  {:params { :client_id     ""
                                 :client_secret ""
@@ -26,11 +28,21 @@
   (swap! settings assoc-in [:tenant_id] tenant_id))
 
 
+
+
+
+(defn dump-settings []
+  (log/info "Settings atom: " @settings))
+
 ;;; API
+
 
 (def version "v1.0")
 
 (def api-base-url (str  "https://graph.microsoft.com" "/" version))
+
+(defn build-url [path]
+  (str api-base-url path))
 
 (def cm (conn-mgr/make-reusable-conn-manager {:timeout 5 :threads 20}))
 
@@ -49,10 +61,17 @@
 (defn set-token! []
   (swap! settings assoc-in [:token]  (get-token)))
 
-;; API clj-http
+(defn set-params! [config]
+  (set-client_id! (get-in config [:params :client_id]))
+  (set-client_secret! (get-in config [:params :client_secret]))
+  (set-tenant_id! (:tenant_id config))
+  (set-token!))
 
+;; API clj-http
+;;; TODO : catch thortling response and add backoff
 (defn call-api [url]
   (try+
+   (log/info "Requesting " url)
    (http/get url {:oauth-token        (:access_token (:token @settings))
                   :as                 :json
                   :debug              false
@@ -76,9 +95,12 @@
      (throw+))))
 
 
-;; ;;  api fetch paged results
+;; API call
 
-(defn api-get [url]
+(defn api-get
+  "Calls msgraph API and handles paged results.
+  Returns vector of results"
+  [url]
   (let [url (str api-base-url url)]
     (loop [response (:body (call-api url))
            results  []]
@@ -91,7 +113,8 @@
   entities without performing a full read of the target resource with every request.
   Microsoft Graph applications can use delta query to efficiently synchronize changes
   with a local data store.
-  See docs at https://docs.microsoft.com/en-us/graph/delta-query-overview" 
+  See docs at https://docs.microsoft.com/en-us/graph/delta-query-overview
+  Returns map {:resuls [] :deltaLink url} " 
   [url]
   (loop [response (:body (call-api url))
          results  []]
@@ -103,77 +126,7 @@
 
 
 
-;;; Users
-;;; https://docs.microsoft.com/en-us/graph/api/resources/users?view=graph-rest-1.0
-
-(defn get-users
-  "Lists users in the organization."
-  []
-  (api-get "/users?$top=999"))
-
-(defn set-users!
-  "Set users in state atom"
-  []
-  (swap! settings assoc-in [:users]  (get-users)))
-
-(defn- get-user-info [user url]
-  (let [url (str "/users/" (:id user) "/" url)]
-    (log/info url)
-    (api-get url)))
 
 
-;;; not working ?
-(defn get-user-by-id
-  "Gets a specific user by id."
-  [user]
-  (api-get (str "/users/" (:id user))))
 
-(defn get-user-photo
-  "Gets the user's profile photo."
-  [user]
-  (get-user-info user "photo/$value"))
-
-(defn get-user-messages
-  "Lists the user's email messages in their primary inbox."
-  [user]
-  (get-user-info user "messages")
-  )
-
-(defn get-user-manager
-  "Gets the user's manager."
-  [user]
-  (get-user-info user "manager")
-  )
-
-(defn get-user-events
-  "Lists the user's upcoming events in their calendar."
-  [user]
-  
-  (get-user-info user "events"))
-
-(defn get-user-drive
-  "Lists the user's upcoming events in their calendar."
-  [user]
-  (get-user-info user "drive"))
-
-(defn get-user-memberOf
-  "Lists the user's upcoming events in their calendar."
-  [user]
-  (get-user-info user "memberOf"))
-
-
-;;; Groups
-
-(defn get-groups []
-  (api-get "/groups?$top=999"))
-
-(defn set-groups! []
-  (swap! settings assoc-in [:groups]  (get-groups)))
-
-(comment
-  (set-token!)
-  (set-users!)
-  (get-user-events (nth (:users @settings) 111))
- 
-  )
 
