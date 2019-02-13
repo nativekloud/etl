@@ -1,4 +1,4 @@
-(ns etl.csv
+(ns etl.csv.core
   (:require [clojure.data.csv :as csv]
             [clojure.java.io :as io]
             [clojure.tools.logging :as log]
@@ -106,4 +106,3 @@
           "STATE"
           (log/info "STATE"  message)
          ))))))
-

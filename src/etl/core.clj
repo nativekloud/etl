@@ -2,8 +2,9 @@
   (:require [say-cheez.core :refer [capture-build-env-to]]
             [cli-matic.core :refer [run-cmd]]
             [etl.singer.core :refer [tap sink discover]]
-            [etl.csv]
-            [etl.pubsub]
+            ;; plugins
+            [etl.csv.core]
+            [etl.pubsub.core]
             [etl.msgraph.core])
   (:gen-class))
 

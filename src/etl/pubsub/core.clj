@@ -1,4 +1,4 @@
-(ns etl.pubsub
+(ns etl.pubsub.core
   (:require [etl.singer.core :refer [discover tap load-config load-catalog]]
             [etl.singer.encoding :refer [decode]]
             [etl.singer.messages :refer [write-record]]
@@ -24,7 +24,6 @@
     )
    com.google.protobuf.ByteString
    ))
-
 
 (def state (atom {}))
 
@@ -115,6 +114,3 @@
     ;; keep tap open
     ;; TODO : exit cleanly with Ctrl + C
     (while true ())))
-
-
-
