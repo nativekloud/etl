@@ -39,6 +39,11 @@
 
 (def version "v1.0")
 
+(defn trunc
+  [s n]
+  (subs s 0 (min (count s) n)))
+
+
 (def api-base-url (str  "https://graph.microsoft.com" "/" version))
 
 (defn build-url [path]
@@ -71,7 +76,7 @@
 ;;; TODO : catch thortling response and add backoff
 (defn call-api [url]
   (try+
-   (log/info "Requesting " url)
+   (log/info "Requesting: " (trunc url 55) "...")
    (http/get url {:oauth-token        (:access_token (:token @settings))
                   :as                 :json
                   :debug              false
@@ -125,6 +130,21 @@
              (concat results (:value response))))))
 
 
+(defn api-get-delta-callback
+  "Delta query enables applications to discover newly created, updated, or deleted
+  entities without performing a full read of the target resource with every request.
+  Microsoft Graph applications can use delta query to efficiently synchronize changes
+  with a local data store.
+  See docs at https://docs.microsoft.com/en-us/graph/delta-query-overview
+  Returns map {:resuls [] :deltaLink url} " 
+  [url fn]
+  (loop [response (:body (call-api url))
+         results  []]
+    (if (nil? ((keyword "@odata.nextLink") response))
+      {:results  (concat results (:value response))
+       :deltaLink ((keyword "@odata.deltaLink") response)}
+      (recur (:body (call-api ((keyword "@odata.nextLink") response)))
+             (concat results (:value response))))))
 
 
 
