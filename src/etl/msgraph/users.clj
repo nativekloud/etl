@@ -1,5 +1,5 @@
 (ns etl.msgraph.users
-  (:require [etl.msgraph.client :refer [api-get api-get-delta
+  (:require [etl.msgraph.client :refer [api-get api-get-delta api-get-delta-callback
                                         build-url settings]]
             [clojure.tools.logging :as log]))
 
@@ -30,6 +30,16 @@
     (log/info url)
     (api-get-delta url)))
 
+(defn get-users-delta-callback
+  "Lists users in the organization and get deltaLink see axample at
+  https://docs.microsoft.com/en-us/graph/delta-query-users
+  returns map: {:results [...] :deltaLink \"url\"}
+  "
+  [fn]
+  (let [default (build-url "/users/delta?$top=999")
+        url (:deltaLink (:users @settings) default )]
+    (log/info url)
+    (api-get-delta-callback url fn)))
 
 (defn set-users!
   "Set users in state atom"

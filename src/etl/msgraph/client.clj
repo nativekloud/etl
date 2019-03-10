@@ -139,12 +139,11 @@
   Returns map {:resuls [] :deltaLink url} " 
   [url fn]
   (loop [response (:body (call-api url))
-         results  []]
+         results  (fn (:value response))]
     (if (nil? ((keyword "@odata.nextLink") response))
-      {:results  (concat results (:value response))
-       :deltaLink ((keyword "@odata.deltaLink") response)}
+      {:deltaLink ((keyword "@odata.deltaLink") response)}
       (recur (:body (call-api ((keyword "@odata.nextLink") response)))
-             (concat results (:value response))))))
+             (fn (:value response))))))
 
 
 

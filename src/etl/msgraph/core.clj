@@ -5,20 +5,35 @@
             [etl.singer.core :refer [discover tap load-catalog load-config]]
             [etl.singer.messages :refer [write-record]]
             [etl.msgraph.client :refer [set-params! dump-settings]]
-            [etl.msgraph.users :refer [get-users-delta]]))
+            [etl.msgraph.users :refer [get-users-delta-callback]]
+            [etl.msgraph.groups :refer [get-groups-delta-callback]]))
 
 
-(defn sync-do [stream config]
+(defn sync-do [stream config state]
   (case (:stream stream)
     "users"
     (do
-      (log/info (:stream stream) stream config)
+      (log/info "Syncing users.")
       (set-params! config)
-      (let [{:keys [results deltaLink]} (get-users-delta)]
-        (doseq [user results] (write-record (:stream stream) user nil nil)))
-     )
-    "groups" 
-    "messages"
+     
+      ;
+      (let [results  (get-users-delta-callback (fn [results] (doseq [user results]
+                                                               (write-record (:stream stream) user nil nil))))]
+        (write-state  state (merge {:users results} (read-state state)))                                ;
+        )
+      )
+    "groups"
+     (do
+      (log/info "Syncing groups.")
+      (set-params! config)
+     
+      ;
+      (let [results  (get-groups-delta-callback (fn [results] (doseq [user results]
+                                                                (write-record (:stream stream) user nil nil))))]
+        (write-state state (merge {:groups results} (read-state state)))                                ;
+        )
+      )
+    "emails"
     (log/info stream)))
 
 
@@ -29,11 +44,11 @@
 (defmethod discover "msgraph"
   [args]
   (let [config (load-config args)
-        catalog (load-catalog args)
+        ;catalog (load-catalog args)
         users (stream "users" "users" {})
         groups (stream "groups" "groups" {})
-        messages (stream "messages" "messages" {})
-        streams [users groups messages]]
+        emails (stream "emails" "emails" {})
+        streams [users groups emails]]
     (log/info "Writing simple catalog info.")    
     ;; Users stream 
     (write-streams streams )
@@ -48,8 +63,18 @@
         streams (:streams catalog)]
     ;; iterate streams and call API
     ;; pass (write-record resource->record )
-    (log/info streams)
+    (log/info "Starting msgraph tap.")
     (doseq [stream streams]
-      (sync-do stream config))
+      (sync-do stream config (:state args)))
     ))
 
+
+(comment
+
+  (def args {:type "msgraph"
+             :config "resources/tap-msgraph.json"
+             :catalog "resources/tap-msgraph-catalog.json"})
+
+  (discover args)
+  
+  )
