@@ -2,10 +2,12 @@
   (:require [say-cheez.core :refer [capture-build-env-to]]
             [cli-matic.core :refer [run-cmd]]
             [etl.singer.core :refer [tap sink discover]]
+            [samsara.trackit :refer [start-reporting!]]
             ;; plugins
             [etl.csv.core]
             [etl.pubsub.core]
             [etl.msgraph.core])
+  (:import [java.util.concurrent TimeUnit])
   (:gen-class))
 
 ;;(set! *warn-on-reflection* false)
@@ -13,6 +15,20 @@
 ;;
 (capture-build-env-to BUILD)
 ;; cli-matic config
+
+(start-reporting!
+   {:type                        :console
+    ;; how often the stats will be displayed
+    :reporting-frequency-seconds 300
+    ;; which output stream should be used stdout or stderr
+    :stream                      (System/err)
+    ;; unit to use to display rates
+    :rate-unit                   TimeUnit/SECONDS
+    ;; unit to use to display durations
+    :duration-unit               TimeUnit/MILLISECONDS
+    ;; to disable metrics instrumentation
+    :jvm-metrics :none})
+
 
 (def CONFIGURATION
   {:app         {:command     "etl"

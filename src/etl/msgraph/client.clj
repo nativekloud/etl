@@ -2,7 +2,9 @@
   (:require [clj-http.client :as http]
             [clj-http.conn-mgr :as conn-mgr]
             [clojure.tools.logging :as log]
-            [slingshot.slingshot :refer [throw+ try+]]))
+            [slingshot.slingshot :refer [throw+ try+]]
+            [safely.core :refer [safely]]
+            ))
 
 ;;; Microsoft Graph API URL's
 ;;; https://docs.microsoft.com/en-us/graph/use-the-api
@@ -17,6 +19,8 @@
                        :token nil}))
 
 ;;; Settings
+
+
 
 (defn set-client_id! [client_id]
   (swap! settings assoc-in [:params :client_id] client_id))
@@ -75,7 +79,31 @@
 ;; API clj-http
 ;;; TODO : catch thortling response and add backoff
 (defn call-api [url]
-  (try+
+  ;; (try+
+  ;;  (log/info "Requesting: " (trunc url 55) "...")
+  ;;  (http/get url {:oauth-token        (:access_token (:token @settings))
+  ;;                 :as                 :json
+  ;;                 :debug              false
+  ;;                 :throw-exceptions   true
+  ;;                 :connection-manager cm
+  ;;                 })
+  ;;  (catch [:status 403] {:keys [request-time headers body]}
+  ;;    (log/warn "403" request-time headers))
+  ;;  (catch [:status 401] {:keys [request-time headers body]}
+  ;;    (log/warn "401" request-time headers))
+  ;;  (catch [:status 400] {:keys [request-time headers body]}
+  ;;    (log/error "400" body))
+  ;;  (catch [:status 404] {:keys [request-time headers body]}
+  ;;    (log/warn "404" request-time headers body))
+  ;;  (catch [:status 503] {:keys [request-time headers body]}
+  ;;    (log/warn "503" request-time headers))
+  ;;  (catch [:status 504] {:keys [request-time headers body]}
+  ;;    (log/warn "504" request-time headers))
+  ;;  (catch Object _
+  ;;    (log/error (:throwable &throw-context) "unexpected error")
+  ;;    (throw+)))
+  (safely
+    (try+
    (log/info "Requesting: " (trunc url 55) "...")
    (http/get url {:oauth-token        (:access_token (:token @settings))
                   :as                 :json
@@ -83,21 +111,29 @@
                   :throw-exceptions   true
                   :connection-manager cm
                   })
-   (catch [:status 403] {:keys [request-time headers body]}
-     (log/warn "403" request-time headers))
-   (catch [:status 401] {:keys [request-time headers body]}
-     (log/warn "401" request-time headers))
-   (catch [:status 400] {:keys [request-time headers body]}
-     (log/error "400" body))
+   ;; (catch [:status 403] {:keys [request-time headers body]}
+   ;;   (log/warn "403" request-time headers))
+   ;; (catch [:status 401] {:keys [request-time headers body]}
+   ;;   (log/warn "401" request-time headers))
+   ;; (catch [:status 400] {:keys [request-time headers body]}
+   ;;   (log/error "400" body))                                     ;
    (catch [:status 404] {:keys [request-time headers body]}
      (log/warn "404" request-time headers body))
-   (catch [:status 503] {:keys [request-time headers body]}
-     (log/warn "503" request-time headers))
-   (catch [:status 504] {:keys [request-time headers body]}
-     (log/warn "504" request-time headers))
+   ;; (catch [:status 503] {:keys [request-time headers body]}
+   ;;   (log/warn "503" request-time headers))
+   ;; (catch [:status 504] {:keys [request-time headers body]}
+   ;;   (log/warn "504" request-time headers))
    (catch Object _
      (log/error (:throwable &throw-context) "unexpected error")
-     (throw+))))
+     (throw+)))
+  
+   :on-error
+  ; :log-level :info
+   :max-retry :forever
+  ; :circuit-breaker :msgraphf
+   :track-as "etl.msgraph.client"
+   )
+  )
 
 
 ;; API call

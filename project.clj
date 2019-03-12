@@ -17,7 +17,9 @@
                  [log4j "1.2.15" :exclusions [javax.mail/mail
                                               javax.jms/jms
                                               com.sun.jdmk/jmxtools
-                                              com.sun.jmx/jmxri]]]
+                                              com.sun.jmx/jmxri]]
+                 [org.slf4j/slf4j-simple "1.7.25"]
+                 [com.brunobonacci/safely "0.5.0-alpha5"]]
   :main etl.core
   :aot :all
   :plugins [[lein-bin "0.3.5"]
