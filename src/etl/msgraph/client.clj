@@ -32,7 +32,7 @@
 
 
 (defn dump-settings []
-  (log/info "Settings atom: " @settings))
+  (print "Settings atom: " @settings))
 
 ;;; API
 
@@ -90,7 +90,7 @@
    (catch [:status 400] {:keys [request-time headers body]}
      (log/error "400" body))
    (catch [:status 404] {:keys [request-time headers body]}
-     (log/warn "404" request-time headers))
+     (log/warn "404" request-time headers body))
    (catch [:status 503] {:keys [request-time headers body]}
      (log/warn "503" request-time headers))
    (catch [:status 504] {:keys [request-time headers body]}
@@ -111,7 +111,21 @@
            results  []]
       (if (nil? ((keyword "@odata.nextLink") response))
         (concat results (:value response))
-        (recur (:body (call-api ((keyword "@odata.nextLink") response))) (concat results (:value response)))))))
+        (recur (:body (call-api ((keyword "@odata.nextLink") response)))
+               (concat results (:value response)))))))
+
+(defn api-get-callback
+  "Calls msgraph API and handles paged results.
+  Returns vector of results"
+  [url fn]
+  (let [url (str api-base-url url)]
+    (loop [response (:body (call-api url))
+           results  (fn (:value response))]
+      (if (nil? ((keyword "@odata.nextLink") response))
+        (fn (:value response))
+        (recur (:body (call-api ((keyword "@odata.nextLink") response)))
+               (fn (:value response)))))))
+
 
 (defn api-get-delta
   "Delta query enables applications to discover newly created, updated, or deleted
@@ -149,3 +163,48 @@
 
 
 
+(comment
+
+  (defn get-resource
+  "Calls msgraph API and handles paged results.
+  Returns vector of results"
+  [url]
+  (let [url (str api-base-url url)]
+    (loop [response (:body (call-api url))
+           results  []]
+      (if (nil? ((keyword "@odata.nextLink") response))
+        (concat results (:value response))
+        (recur (:body (call-api ((keyword "@odata.nextLink") response))) (concat results (:value response)))))))
+  
+
+  (def resource {:users {:get   "/users"
+                         :delta "/users/delta"}
+                 :groups {:get   "/groups"
+                          :delta "/users/delta"}
+                 :mailFolders {:get "/users/%s/mailFolders"}
+                 :messages {:get "/users/%s/mailFolders/%s/messages"}})
+
+  (set-token!)
+  
+  (def users  (get-resource (get-in resource [:users :get])))
+
+  (let [user (first (drop 110 users))]
+    (:id user)
+    (get-resource (format  (get-in resource [:mailFolders :get]) (:id user)))
+    )
+  
+
+  
+  
+  (get-in resource [:users :get])
+  
+  @settings
+  
+  (get-token)
+  
+  (format "test %s", :et)
+  
+  
+  
+  
+  )

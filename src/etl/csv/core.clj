@@ -92,13 +92,13 @@
   [args]
   (let [config (load-config args)
         dirpath (:dirpath config)]
-  (with-open [f (io/writer (:file config))]
+  (with-open [f (io/writer dirpath)]
    (doseq [line (line-seq (java.io.BufferedReader. *in*))]
      (let [message (parse line)]
          (case (:type message)
          
          "RECORD"
-          (csv/write-csv f (maps->csv-data [(:record message)]))
+         (csv/write-csv f [(:record message)])
 
           "SCHEMA"
           (log/info "schema" message)

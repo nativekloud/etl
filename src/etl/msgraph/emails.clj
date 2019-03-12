@@ -1,6 +1,6 @@
 (ns etl.msgraph.emails
   (:require [clojure.tools.logging :as log]
-            [etl.msgraph.client :refer [api-get]]))
+            [etl.msgraph.client :refer [api-get api-get-callback]]))
 
 
 (defn has-mail? [users]
@@ -37,3 +37,12 @@
 
 (defn messages [user folder]
   (api-get (str "/users/" (:id user) "/mailFolders/" (:id folder) "/messages?$top=999")))
+
+(defn messages-callback [user folder fn]
+  (when-not (zero? (:totalItemCount folder))
+    (log/info "geting messages in folder " (:displayName folder) " totalItemCount:" (:totalItemCount folder) )
+    (api-get-callback (str "/users/" (:id user) "/mailFolders/" (:id folder) "/messages?$top=500") fn)))
+
+(defn get-all-messages [user]
+  (let [folders (get-user-folders user)]
+    (mapv #(messages user %) folders)))

@@ -5,7 +5,8 @@
             [etl.singer.core :refer [discover tap load-catalog load-config]]
             [etl.singer.messages :refer [write-record]]
             [etl.msgraph.client :refer [set-params! dump-settings]]
-            [etl.msgraph.users :refer [get-users-delta-callback]]
+            [etl.msgraph.users :refer [get-users-delta-callback get-users]]
+            [etl.msgraph.emails :refer [get-user-folders messages-callback]]
             [etl.msgraph.groups :refer [get-groups-delta-callback]]))
 
 
@@ -57,16 +58,28 @@
 
 (defmethod tap "msgraph"
   [args]
-  (let [config (load-config args)
-        catalog (load-catalog args)
-        state (read-state (:state args))
-        streams (:streams catalog)]
-    ;; iterate streams and call API
-    ;; pass (write-record resource->record )
-    (log/info "Starting msgraph tap.")
-    (doseq [stream streams]
-      (sync-do stream config (:state args)))
-    ))
+  (log/info "Starting msgraph tap.")
+  ;; FIXME: start thread which will refresh token in atom when it's about to expire
+  (set-params! (load-config args))
+  (doseq [user (get-users)]
+    (let [folders        (get-user-folders user)
+          totalItemCount (reduce (fn [sum folder] (+ (:totalItemCount folder) sum))
+                                 0
+                                 folders)
+          current-state  (read-state (:state args))]
+      (when-not (zero? totalItemCount)
+        (log/info "getting messages for" (:userPrincipalName user)
+                  "totalItemCount:" totalItemCount
+                  "folders:" (count folders))
+        (write-state (:state args) (merge {:user user} current-state))                                ;
+        (doseq [folder folders]
+          (messages-callback user folder
+                             (fn [results] (doseq [message results]
+                                             (write-record (:stream stream) message nil nil)))))
+        )))
+  (log/info "msgraph tap finished sucesfully.")
+  )
+
 
 
 (comment
@@ -76,5 +89,19 @@
              :catalog "resources/tap-msgraph-catalog.json"})
 
   (discover args)
+
+  (def f (seq [{:totalItemCount 34} {:totalItemCount 12}]))
+
+  (reduce
+   (fn [ right] (+ (:totalItemCount right) left) )
+   0
+   f)
+  (def t 3)
+  
+  (when-not (zero? t)
+   (println "test")
+    (+ 1 2))
+  
+  
   
   )

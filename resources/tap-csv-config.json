@@ -1,4 +1,3 @@
 {
-    "dirpath": ".",
-    "pattern": ".*\\.csv"
+    "dirpath": "test.csv"
 }

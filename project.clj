@@ -8,7 +8,7 @@
                  [cheshire "5.8.1"]
                  [clj-http "3.9.1"]
                  [slingshot "0.12.2"]
-                 [com.cognitect/http-client "0.1.87"] 
+                ;; [com.cognitect/http-client "0.1.87"] 
                  [org.clojure/data.csv "0.1.4"]
                  [com.google.auth/google-auth-library-credentials "0.13.0"]
                  [com.google.cloud/google-cloud-pubsub "1.62.0"]
