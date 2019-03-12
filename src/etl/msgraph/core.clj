@@ -6,7 +6,7 @@
             [etl.singer.messages :refer [write-record]]
             [etl.msgraph.client :refer [set-params! dump-settings]]
             [etl.msgraph.users :refer [get-users-delta-callback get-users]]
-            [etl.msgraph.emails :refer [get-user-folders messages-callback]]
+            [etl.msgraph.emails :refer [get-user-folders messages-callback has-mail?]]
             [etl.msgraph.groups :refer [get-groups-delta-callback]]))
 
 
@@ -61,7 +61,7 @@
   (log/info "Starting msgraph tap.")
   ;; FIXME: start thread which will refresh token in atom when it's about to expire
   (set-params! (load-config args))
-  (doseq [user (get-users)]
+  (doseq [user (has-mail? (get-users))]
     (let [folders        (get-user-folders user)
           totalItemCount (reduce (fn [sum folder] (+ (:totalItemCount folder) sum))
                                  0
