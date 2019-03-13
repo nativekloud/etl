@@ -11,7 +11,9 @@
 
 
 (defn users-left-to-scan [state users]
-  (drop-while #(not= (:id %) (get-in state [:user :id])) users))
+  (if-not (nil? (get-in state [:user :id])) 
+    (drop-while #(not= (:id %) (get-in state [:user :id])) users)
+    users))
 
 ;;; Singer
 
@@ -71,9 +73,14 @@
              :catalog "resources/tap-msgraph-catalog.json"})
 
   (discover args)
+  (:id nil)
+  (get-in nil [:user :id]) 
+  (read-state "./test.txt")
   
   (def f (seq [{:totalItemCount 34} {:totalItemCount 12}]))
 
+  (users-left-to-scan {:user {:id 2}} [{:id 1} {:id 2}])
+  
   (reduce
    (fn [ right] (+ (:totalItemCount right) left) )
    0
