@@ -10,33 +10,6 @@
             [etl.msgraph.groups :refer [get-groups-delta-callback]]))
 
 
-(defn sync-do [stream config state]
-  (case (:stream stream)
-    "users"
-    (do
-      (log/info "Syncing users.")
-      (set-params! config)
-     
-      ;
-      (let [results  (get-users-delta-callback (fn [results] (doseq [user results]
-                                                               (write-record (:stream stream) user nil nil))))]
-        (write-state  state (merge {:users results} (read-state state)))                                ;
-        )
-      )
-    "groups"
-     (do
-      (log/info "Syncing groups.")
-      (set-params! config)
-     
-      ;
-      (let [results  (get-groups-delta-callback (fn [results] (doseq [user results]
-                                                                (write-record (:stream stream) user nil nil))))]
-        (write-state state (merge {:groups results} (read-state state)))                                ;
-        )
-      )
-    "emails"
-    (log/info stream)))
-
 (defn users-left-to-scan [state users]
   (drop-while #(not= (:id %) (get-in state [:user :id])) users))
 
