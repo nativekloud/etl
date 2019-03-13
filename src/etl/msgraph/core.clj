@@ -37,7 +37,8 @@
     "emails"
     (log/info stream)))
 
-
+(defn users-left-to-scan [state users]
+  (drop-while #(not= (:id %) (get-in state [:user :id])) users))
 
 ;;; Singer
 
@@ -55,28 +56,36 @@
     (write-streams streams )
     ))
 
+(defn cb [results]
+  (doseq [message results]
+    (write-record (:stream stream) message nil nil)) )
+
+
 ;;; TODO: pickup a state if given
 (defmethod tap "msgraph"
   [args]
   (log/info "Starting msgraph tap.")
   ;; FIXME: start thread which will refresh token in atom when it's about to expire
   (set-params! (load-config args))
-  (doseq [user (has-mail? (get-users))]
-    (let [folders        (get-user-folders user)
-          totalItemCount (reduce (fn [sum folder] (+ (:totalItemCount folder) sum))
-                                 0
-                                 folders)
-          current-state  (read-state (:state args))]
-      (when-not (zero? totalItemCount)
-        (log/info "getting messages for" (:userPrincipalName user)
-                  "totalItemCount:" totalItemCount
-                  "folders:" (count folders))
-        (write-state (:state args) (merge {:user user} current-state))                                ;
-        (doseq [folder folders]
-          (messages-callback user folder
-                             (fn [results] (doseq [message results]
-                                             (write-record (:stream stream) message nil nil)))))
-        )))
+  ;;
+  (let [initial-state (read-state (:state args))
+        users-with-mail (has-mail? (get-users))
+        users-to-scan (users-left-to-scan initial-state users-with-mail)]
+    (doseq [user users-to-scan]
+      (let [current-state  (read-state (:state args))
+            folders        (get-user-folders user)
+            totalItemCount (reduce (fn [sum folder] (+ (:totalItemCount folder) sum))
+                                   0
+                                   folders)
+            ]
+        (when-not (zero? totalItemCount)
+          (log/info "getting messages for" (:userPrincipalName user)
+                    "totalItemCount:" totalItemCount
+                    "folders:" (count folders))
+          (write-state (:state args) (merge current-state {:user user}))                                ;
+          (doseq [folder folders]
+            (messages-callback user folder cb))
+          ))))
   (log/info "msgraph tap finished sucesfully.")
   )
 
@@ -89,7 +98,7 @@
              :catalog "resources/tap-msgraph-catalog.json"})
 
   (discover args)
-
+  
   (def f (seq [{:totalItemCount 34} {:totalItemCount 12}]))
 
   (reduce
