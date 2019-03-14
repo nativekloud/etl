@@ -17,7 +17,7 @@
   (walk/keywordize-keys (decode (slurp path)))
   )
 
-(defmethod read-config-file :gcs [path]
+(defmethod read-config-file :gs [path]
   (let [[prefix url] (s/split path #"://")
         [bucket-name blob-name] (s/split url #"/")  ;FIXME: working only with single directory level
         ]
@@ -32,7 +32,7 @@
   (with-open [w (writer path)]
     (.write w (encode data))))
 
-(defmethod write-config-file :gcs [path data]
+(defmethod write-config-file :gs [path data]
   (let [[prefix url] (s/split path #"://")
         [bucket-name blob-name] (s/split url #"/")]
     ;[bucket-name blob-name]
