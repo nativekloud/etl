@@ -32,9 +32,6 @@
   (swap! settings assoc-in [:tenant_id] tenant_id))
 
 
-
-
-
 (defn dump-settings []
   (print "Settings atom: " @settings))
 
@@ -77,31 +74,7 @@
   (set-token!))
 
 ;; API clj-http
-;;; TODO : catch thortling response and add backoff
 (defn call-api [url]
-  ;; (try+
-  ;;  (log/info "Requesting: " (trunc url 55) "...")
-  ;;  (http/get url {:oauth-token        (:access_token (:token @settings))
-  ;;                 :as                 :json
-  ;;                 :debug              false
-  ;;                 :throw-exceptions   true
-  ;;                 :connection-manager cm
-  ;;                 })
-  ;;  (catch [:status 403] {:keys [request-time headers body]}
-  ;;    (log/warn "403" request-time headers))
-  ;;  (catch [:status 401] {:keys [request-time headers body]}
-  ;;    (log/warn "401" request-time headers))
-  ;;  (catch [:status 400] {:keys [request-time headers body]}
-  ;;    (log/error "400" body))
-  ;;  (catch [:status 404] {:keys [request-time headers body]}
-  ;;    (log/warn "404" request-time headers body))
-  ;;  (catch [:status 503] {:keys [request-time headers body]}
-  ;;    (log/warn "503" request-time headers))
-  ;;  (catch [:status 504] {:keys [request-time headers body]}
-  ;;    (log/warn "504" request-time headers))
-  ;;  (catch Object _
-  ;;    (log/error (:throwable &throw-context) "unexpected error")
-  ;;    (throw+)))
   (safely
     (try+
    (log/info "Requesting: " (trunc url 55) "...")
@@ -111,27 +84,17 @@
                   :throw-exceptions   true
                   :connection-manager cm
                   })
-   ;; (catch [:status 403] {:keys [request-time headers body]}
-   ;;   (log/warn "403" request-time headers))
-   ;; (catch [:status 401] {:keys [request-time headers body]}
-   ;;   (log/warn "401" request-time headers))
-   ;; (catch [:status 400] {:keys [request-time headers body]}
-   ;;   (log/error "400" body))                                     ;
+                        ;
    (catch [:status 404] {:keys [request-time headers body]}
      (log/warn "404" request-time headers body))
-   ;; (catch [:status 503] {:keys [request-time headers body]}
-   ;;   (log/warn "503" request-time headers))
-   ;; (catch [:status 504] {:keys [request-time headers body]}
-   ;;   (log/warn "504" request-time headers))
    (catch Object _
      (log/error (:throwable &throw-context) "unexpected error")
      (throw+)))
   
    :on-error
-  ; :log-level :info
    :max-retry :forever
-  ; :circuit-breaker :msgraphf
    :track-as "etl.msgraph.client"
+   :log-stacktrace false
    )
   )
 

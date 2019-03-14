@@ -36,7 +36,7 @@
     (write-record (:stream stream) message nil nil)) )
 
 
-;;; TODO: pickup a state if given
+;;;
 (defmethod tap "msgraph"
   [args]
   (log/info "Starting msgraph tap.")
