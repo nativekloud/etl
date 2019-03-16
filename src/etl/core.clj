@@ -1,12 +1,14 @@
 (ns etl.core
   (:require [say-cheez.core :refer [capture-build-env-to]]
             [cli-matic.core :refer [run-cmd]]
-            [etl.singer.core :refer [tap sink discover]]
+            [etl.singer.core :refer [tap sink discover transform]]
             [samsara.trackit :refer [start-reporting!]]
             ;; plugins
             [etl.csv.core]
             [etl.pubsub.core]
-            [etl.msgraph.core])
+            [etl.msgraph.core]
+            [etl.transform.core])
+  
   (:import [java.util.concurrent TimeUnit])
   (:gen-class))
 
@@ -69,7 +71,14 @@
                                  :as      "Type of tap [csv]"
                                  :type    :string
                                  :default "csv"}]
-                  :runs        discover}]})
+                  :runs        discover}
+                 {:command     "transform" :short "convert"
+                  :description ["transform data from *in* to *out*"]
+                  :opts        [{:option  "type"
+                                 :as      "Type of transform []"
+                                 :type    :string }]
+                  :runs        transform}
+                 ]})
 
 (defn -main [& args]
   (run-cmd args CONFIGURATION))
