@@ -1,8 +1,8 @@
 (ns etl.msgraph.core
   (:require [clojure.tools.logging :as log]
             [etl.singer.catalog :refer [stream write-streams]]
-            [etl.singer.state :refer [read-state write-state]]
-            [etl.singer.core :refer [discover tap load-catalog load-config]]
+            [etl.singer.config :refer [read-state write-state load-catalog load-config]]
+            [etl.singer.core :refer [discover tap]]
             [etl.singer.messages :refer [write-record]]
             [etl.msgraph.client :refer [set-params! dump-settings]]
             [etl.msgraph.users :refer [get-users-delta-callback get-users]]
@@ -33,8 +33,25 @@
 
 (defn cb [results]
   (doseq [message results]
-    (write-record (:stream stream) message nil nil)) )
+    ;(log/info message)
+    (write-record (:stream stream) message nil nil)
+    ) )
 
+(defn msg->item [m]
+  {:ID (:ID m)
+   :endpoint-id ""
+   :name (:subject m)
+   :mime-type (get-in m [:body :content-type])
+   :type ""
+   :content (get-in m [:body :content])
+   :modified-time (:LastModifiedTime m)
+   :sharing ""
+   :location "exchange"
+   :category "email"
+   :URL (:WebLink m)
+   :sender (get-in m [:from :EmailAddress :address])
+   :user (get-in m [:user :mail])
+   :sharedWith ""})
 
 ;;;
 (defmethod tap "msgraph"
@@ -43,11 +60,11 @@
   ;; FIXME: start thread which will refresh token in atom when it's about to expire
   (set-params! (load-config args))
   ;;
-  (let [initial-state (read-state (:state args))
+  (let [initial-state (read-state  args)
         users-with-mail (has-mail? (get-users))
         users-to-scan (users-left-to-scan initial-state users-with-mail)]
     (doseq [user users-to-scan]
-      (let [current-state  (read-state (:state args))
+      (let [current-state  (read-state args)
             folders        (get-user-folders user)
             totalItemCount (reduce (fn [sum folder] (+ (:totalItemCount folder) sum))
                                    0
@@ -57,7 +74,7 @@
           (log/info "getting messages for" (:userPrincipalName user)
                     "totalItemCount:" totalItemCount
                     "folders:" (count folders))
-          (write-state (:state args) (merge current-state {:user user}))                                ;
+          (write-state args (merge current-state {:user user}))                                ;
           (doseq [folder folders]
             (messages-callback user folder cb))
           ))))

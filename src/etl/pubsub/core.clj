@@ -1,7 +1,8 @@
 (ns etl.pubsub.core
-  (:require [etl.singer.core :refer [discover tap load-config load-catalog]]
-            [etl.singer.encoding :refer [decode]]
-            [etl.singer.messages :refer [write-record]]
+  (:require [etl.singer.core :refer [discover tap sink ]]
+            [etl.singer.config :refer [load-config load-catalog] ]
+            [etl.singer.encoding :refer [decode encode]]
+            [etl.singer.messages :refer [write-record parse]]
             [etl.singer.catalog :refer [stream write-streams]]
             [clojure.tools.logging :as log]
             [clojure.string :as str])
@@ -114,3 +115,23 @@
     ;; keep tap open
     ;; TODO : exit cleanly with Ctrl + C
     (while true ())))
+
+(defmethod sink "pubsub"
+  [args]
+  (let [config (load-config args)
+        project_id (:project_id config)
+        topic (:topic config)]
+    (doseq [line (line-seq (java.io.BufferedReader. *in*))]
+      (let [message (parse line)] 
+          (case (:type message)
+            
+            "RECORD"
+            (log/info "record" [(:record message)])
+            (publish-async project_id topic (encode (:record message)) )
+
+            "SCHEMA"
+            (log/info "schema" message)
+
+            "STATE"
+            (log/info "STATE"  message)
+            )))))

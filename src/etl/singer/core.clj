@@ -24,22 +24,31 @@
   [args]
   (log/error "Discover not implemented for ->" args))
 
+(defmulti transform
+  (fn [args] (:type args)))
+
+(defmethod transform :default
+  [args]
+  (log/error "Discover not implemented for ->" args))
+
 (defn now []
   (.toString (java.time.LocalDateTime/now)))
 
-(defn read-config-file [path]
-  (walk/keywordize-keys (decode (slurp path))))
 
-(defn load-config
-  "Reads config file and returns config map."
-  [args]
-  (->(:config args)
-     read-config-file))
 
-(defn load-state [args]
-  (->(:state args)
-     read-config-file))
+;; (defn read-config-file [path]
+;;   (walk/keywordize-keys (decode (slurp path))))
 
-(defn load-catalog [args]
-  (->(:catalog args)
-     read-config-file))
+;; (defn load-config
+;;   "Reads config file and returns config map."
+;;   [args]
+;;   (->(:config args)
+;;      read-config-file))
+
+;; (defn load-state [args]
+;;   (->(:state args)
+;;      read-config-file))
+
+;; (defn load-catalog [args]
+;;   (->(:catalog args)
+;;      read-config-file))

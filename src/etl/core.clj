@@ -16,18 +16,19 @@
 (capture-build-env-to BUILD)
 ;; cli-matic config
 
-(start-reporting!
-   {:type                        :console
-    ;; how often the stats will be displayed
-    :reporting-frequency-seconds 300
-    ;; which output stream should be used stdout or stderr
-    :stream                      (System/err)
-    ;; unit to use to display rates
-    :rate-unit                   TimeUnit/SECONDS
-    ;; unit to use to display durations
-    :duration-unit               TimeUnit/MILLISECONDS
-    ;; to disable metrics instrumentation
-    :jvm-metrics :none})
+
+;; (start-reporting!
+;;    {:type                        :console
+;;     ;; how often the stats will be displayed
+;;     :reporting-frequency-seconds 300
+;;     ;; which output stream should be used stdout or stderr
+;;     :stream                      (System/err)
+;;     ;; unit to use to display rates
+;;     :rate-unit                   TimeUnit/SECONDS
+;;     ;; unit to use to display durations
+;;     :duration-unit               TimeUnit/MILLISECONDS
+;;     ;; to disable metrics instrumentation
+;;     :jvm-metrics :none})
 
 
 (def CONFIGURATION

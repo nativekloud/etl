@@ -49,7 +49,7 @@
   [args data]
   (write-config-file (:config args) data))
 
-(defn load-state [args]
+(defn read-state [args]
   (->(:state args)
      read-config-file))
 

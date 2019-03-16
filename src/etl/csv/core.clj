@@ -2,7 +2,8 @@
   (:require [clojure.data.csv :as csv]
             [clojure.java.io :as io]
             [clojure.tools.logging :as log]
-            [etl.singer.core :refer [tap discover sink load-config load-catalog now]]
+            [etl.singer.core :refer [tap discover sink  now]]
+            [etl.singer.config :refer [load-config load-catalog]]
             [etl.singer.messages :refer [write-record write-schema write-state parse]]
             [etl.singer.catalog :refer [stream write-streams]]))
 
