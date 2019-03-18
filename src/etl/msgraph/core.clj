@@ -6,7 +6,7 @@
             [etl.singer.messages :refer [write-record]]
             [etl.msgraph.client :refer [set-params! dump-settings]]
             [etl.msgraph.users :refer [get-users-delta-callback get-users]]
-            [etl.msgraph.emails :refer [get-user-folders messages-callback has-mail?]]
+            [etl.msgraph.emails :refer [get-user-folders messages-callback has-mail? messages get-all-messages]]
             [etl.msgraph.groups :refer [get-groups-delta-callback]]))
 
 
@@ -37,22 +37,6 @@
     (write-record (:stream stream) message nil nil)
     ) )
 
-(defn msg->item [m]
-  {:ID (:ID m)
-   :endpoint-id ""
-   :name (:subject m)
-   :mime-type (get-in m [:body :content-type])
-   :type ""
-   :content (get-in m [:body :content])
-   :modified-time (:LastModifiedTime m)
-   :sharing ""
-   :location "exchange"
-   :category "email"
-   :URL (:WebLink m)
-   :sender (get-in m [:from :EmailAddress :address])
-   :user (get-in m [:user :mail])
-   :sharedWith ""})
-
 ;;;
 (defmethod tap "msgraph"
   [args]
@@ -75,8 +59,18 @@
                     "totalItemCount:" totalItemCount
                     "folders:" (count folders))
           (write-state args (merge current-state {:user user}))                                ;
+     
+          ;; (doseq [message (get-all-messages user)]
+          ;;   (write-record "messages" message nil nil))
+          
           (doseq [folder folders]
-            (messages-callback user folder cb))
+            (messages-callback user folder (fn [user results] (doseq [message results]
+                                                                (write-record "messages" (merge message {:user user}) nil nil)))))
+          ;; ;; (doall (pmap 
+          ;;         #(messages-callback user %
+          ;;                             (fn [results] (doseq [message results]
+          ;;                                             (write-record "messages" message nil nil)))) folders ))
+          
           ))))
   (log/info "msgraph tap finished sucesfully.")
   )

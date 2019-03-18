@@ -77,7 +77,7 @@
 (defn call-api [url]
   (safely
     (try+
-   (log/info "Requesting: " (trunc url 55) "...")
+   (log/info "Requesting: " (trunc url 200) "...")
    (http/get url {:oauth-token        (:access_token (:token @settings))
                   :as                 :json
                   :debug              false
@@ -116,14 +116,14 @@
 (defn api-get-callback
   "Calls msgraph API and handles paged results.
   Returns vector of results"
-  [url fn]
+  [url user fn]
   (let [url (str api-base-url url)]
     (loop [response (:body (call-api url))
-           results  (fn (:value response))]
+           results  (fn user (:value response))]
       (if (nil? ((keyword "@odata.nextLink") response))
-        (fn (:value response))
+        (fn user (:value response))
         (recur (:body (call-api ((keyword "@odata.nextLink") response)))
-               (fn (:value response)))))))
+               (fn user (:value response)))))))
 
 
 (defn api-get-delta

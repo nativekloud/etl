@@ -1,4 +1,4 @@
 build:
 	lein bin
 msgraph:
-	target/etl tap --type msgraph | target/etl transform --type merge > results.json
+	target/etl tap --type msgraph | target/etl transform --type exchange | target/etl transform --type merge > results.json

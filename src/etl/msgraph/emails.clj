@@ -41,8 +41,8 @@
 (defn messages-callback [user folder fn]
   (when-not (zero? (:totalItemCount folder))
     (log/info "geting messages in folder " (:displayName folder) " totalItemCount:" (:totalItemCount folder) )
-    (api-get-callback (str "/users/" (:id user) "/mailFolders/" (:id folder) "/messages?$top=500") fn)))
+    (api-get-callback (str "/users/" (:id user) "/mailFolders/" (:id folder) "/messages?$top=500") user fn)))
+
 
 (defn get-all-messages [user]
-  (let [folders (get-user-folders user)]
-    (mapv #(messages user %) folders)))
+  (doseq [folder (get-user-folders user)] (messages user folder)))
